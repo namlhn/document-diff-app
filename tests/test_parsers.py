@@ -57,3 +57,28 @@ def test_scanned_pdf_detected():
 def test_invalid_inputs_raise(name, data):
     with pytest.raises(ParseError):
         parse_document(data, name)
+
+
+@pytest.mark.parametrize("title,bold,kind", [
+    ("PROFESSIONAL SUMMARY", True, "heading"),
+    ("CORE EXPERTISE", True, "heading"),
+    ("SELECTED PROJECTS", True, "heading"),
+    ("PROFESSIONAL SUMMARY", False, "paragraph"),
+    ("Professional Summary", True, "paragraph"),
+    ("123 & /", True, "paragraph"),
+    ("A" * 81, True, "paragraph"),
+])
+def test_pdf_small_all_caps_heading(title, bold, kind):
+    import fitz
+
+    with fitz.open() as doc:
+        page = doc.new_page(width=1000)
+        page.insert_text((50, 80), "LE HOAI NAM", fontsize=18, fontname="hebo")
+        page.insert_text((50, 140), title, fontsize=11.5,
+                         fontname="hebo" if bold else "helv")
+        page.insert_text((50, 200), "This body paragraph has enough characters to establish the body font size. " * 2,
+                         fontsize=10.5)
+        result = parse_document(doc.tobytes(), "cv.pdf")
+    assert result.blocks[1].kind == kind
+    expected = ["LE HOAI NAM", title] if kind == "heading" else ["LE HOAI NAM"]
+    assert result.blocks[2].section_path == expected

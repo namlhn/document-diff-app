@@ -11,6 +11,7 @@ import os
 from typing import Optional
 
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile, status
+from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, PlainTextResponse
 
@@ -77,7 +78,8 @@ async def compare_documents_json(
     )
 
     try:
-        result = compare_documents(
+        result = await run_in_threadpool(
+            compare_documents,
             old_bytes,
             old_file.filename or "old_file",
             new_bytes,
@@ -115,7 +117,8 @@ async def compare_documents_html(
     )
 
     try:
-        result = compare_documents(
+        result = await run_in_threadpool(
+            compare_documents,
             old_bytes,
             old_file.filename or "old_file",
             new_bytes,
@@ -152,7 +155,8 @@ async def compare_documents_patch(
     opts = CompareOptions(ignore_formatting=ignore_formatting, max_upload_mb=MAX_MB)
 
     try:
-        result = compare_documents(
+        result = await run_in_threadpool(
+            compare_documents,
             old_bytes,
             old_file.filename or "old_file",
             new_bytes,

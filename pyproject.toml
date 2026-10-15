@@ -15,10 +15,13 @@ dependencies = [
     "rapidfuzz>=3.0",
     "numpy>=1.23",
     "diff-match-patch>=20230430",
+    "fastapi>=0.100.0",
+    "uvicorn[standard]>=0.23.0",
+    "python-multipart>=0.0.6",
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=7"]
+dev = ["pytest>=7", "hypothesis>=6", "httpx>=0.24"]
 
 [project.scripts]
 document-diff = "document_diff.cli:main"

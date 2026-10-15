@@ -83,3 +83,24 @@ def test_benchmark_100_pages():
     res = compare_documents(old, "a.pdf", new, "b.pdf")
     assert len(real(res)) == 1
     print("100-page benchmark:", res.stats)
+
+
+def test_comparison_validates_each_upload_once(monkeypatch):
+    import hashlib
+    import document_diff.parsers as parsers
+
+    calls = []
+    original = parsers.validate_upload
+
+    def track(data, filename, max_mb=50):
+        calls.append(filename)
+        return original(data, filename, max_mb)
+
+    monkeypatch.setattr(parsers, "validate_upload", track)
+    old, new = b"Original paragraph.", b"Updated paragraph."
+    result = compare_documents(old, "old.md", new, "new.md")
+    assert calls == ["old.md", "new.md"]
+    assert result.old_sha256 == hashlib.sha256(old).hexdigest()
+    assert result.new_sha256 == hashlib.sha256(new).hexdigest()
+    assert result.stats["old_metadata"]["sha256"] == result.old_sha256
+    assert result.stats["new_metadata"]["sha256"] == result.new_sha256

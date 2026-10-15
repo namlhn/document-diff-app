@@ -22,6 +22,10 @@ _LIST_ITEM = re.compile(r"^(?:[-•*·▪●‣◦]|\(?\d+[.)]|\(?[a-zđ][.)])\s
 _NUMBERED_HEADING = re.compile(r"^\d+(?:\.\d+)*\.?\s+[A-ZĐÀ-Ỹ]")
 _LEGAL_HEADING = re.compile(r"^(CHƯƠNG|MỤC|ĐIỀU|PHẦN|CHAPTER|SECTION|ARTICLE|PART)\s+[IVXLCDM\d]+", re.IGNORECASE)
 
+_ALL_CAPS_HEADING = re.compile(
+    r"^[A-ZÀÁẠẢÃÂẦẤẬẨẪĂẰẮẶẲẴÈÉẸẺẼÊỀẾỆỂỄÌÍỊỈĨÒÓỌỎÕÔỒỐỘỔỖƠỜỚỢỞỠÙÚỤỦŨƯỪỨỰỬỮỲÝỴỶỸĐ\d\s&/,\-–—()]{3,80}$"
+)
+
 
 def _join_lines(lines: List[str]) -> str:
     out = ""
@@ -128,8 +132,11 @@ def parse_pdf(data: bytes, id_prefix: str = "b") -> ParseResult:
     for e in kept:
         t = e["text"]
         big = e["size"] in heading_sizes
+        is_all_caps = bool(_ALL_CAPS_HEADING.fullmatch(t)) and any(c.isalpha() for c in t)
         e["heading"] = e["nlines"] <= 2 and len(t) <= 200 and (
-            big or (e["bold"] and (_LEGAL_HEADING.match(t) or _NUMBERED_HEADING.match(t))))
+            big or (e["bold"] and (
+                _LEGAL_HEADING.match(t) or _NUMBERED_HEADING.match(t)
+                or (e["nlines"] == 1 and is_all_caps))))
         e["level"] = min(heading_sizes.index(e["size"]) + 1, 6) if big else 2
 
     # --- cross-page paragraph stitching

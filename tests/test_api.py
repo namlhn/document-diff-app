@@ -1,4 +1,6 @@
 """Tests for FastAPI endpoints in main.py."""
+import pytest
+
 from fastapi.testclient import TestClient
 
 from main import app
@@ -76,3 +78,26 @@ def test_api_invalid_file_extension():
     )
     assert response.status_code == 400
     assert "Unsupported file type" in response.json()["detail"]
+
+
+@pytest.mark.parametrize("endpoint", ["/api/v1/diff", "/api/v1/diff/html", "/api/v1/diff/patch"])
+def test_comparison_runs_outside_event_loop(monkeypatch, endpoint):
+    import asyncio
+    import main
+
+    original = main.compare_documents
+    worker_calls = []
+
+    def compare_in_worker(*args, **kwargs):
+        with pytest.raises(RuntimeError, match="no running event loop"):
+            asyncio.get_running_loop()
+        worker_calls.append(True)
+        return original(*args, **kwargs)
+
+    monkeypatch.setattr(main, "compare_documents", compare_in_worker)
+    response = client.post(endpoint, files={
+        "old_file": ("old.md", b"Old paragraph.", "text/markdown"),
+        "new_file": ("new.md", b"New paragraph.", "text/markdown"),
+    })
+    assert response.status_code == 200
+    assert worker_calls == [True]

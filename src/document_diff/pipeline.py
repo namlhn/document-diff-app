@@ -9,7 +9,7 @@ from typing import Optional
 from .diff import classify
 from .matching import align
 from .models import ComparisonResult, CompareOptions
-from .parsers import parse_document, validate_upload
+from .parsers import parse_document
 
 
 def compare_documents(old_data: bytes, old_name: str, new_data: bytes, new_name: str,
@@ -17,10 +17,10 @@ def compare_documents(old_data: bytes, old_name: str, new_data: bytes, new_name:
     """Compare two documents. Raises ParseError on invalid/empty/unparseable input."""
     opts = options or CompareOptions()
     t0 = time.perf_counter()
-    _, old_hash = validate_upload(old_data, old_name, opts.max_upload_mb)
-    _, new_hash = validate_upload(new_data, new_name, opts.max_upload_mb)
     old_res = parse_document(old_data, old_name, "old", opts.max_upload_mb)
     new_res = parse_document(new_data, new_name, "new", opts.max_upload_mb)
+    old_hash = old_res.metadata["sha256"]
+    new_hash = new_res.metadata["sha256"]
     t1 = time.perf_counter()
 
     pairs = align(old_res.blocks, new_res.blocks, opts)

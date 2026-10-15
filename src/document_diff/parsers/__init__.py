@@ -30,8 +30,10 @@ def validate_upload(data: bytes, filename: str, max_mb: int = 50) -> Tuple[str, 
 
 
 def parse_document(data: bytes, filename: str, id_prefix: str = "b", max_mb: int = 50) -> ParseResult:
-    ext, _ = validate_upload(data, filename, max_mb)
-    return SUPPORTED[ext](data, id_prefix)
+    ext, sha256 = validate_upload(data, filename, max_mb)
+    result = SUPPORTED[ext](data, id_prefix)
+    result.metadata["sha256"] = sha256
+    return result
 
 
 __all__ = ["parse_document", "validate_upload", "parse_pdf", "parse_docx", "parse_markdown"]
