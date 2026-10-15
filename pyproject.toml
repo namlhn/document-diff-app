@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "document-diff"
+version = "0.1.0"
+description = "Compare two documents (PDF, DOCX, Markdown) like a source-code diff tool."
+requires-python = ">=3.9"
+dependencies = [
+    "streamlit>=1.30",
+    "PyMuPDF>=1.23",
+    "python-docx>=1.0",
+    "markdown-it-py>=3.0",
+    "rapidfuzz>=3.0",
+    "numpy>=1.23",
+    "diff-match-patch>=20230430",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7"]
+
+[project.scripts]
+document-diff = "document_diff.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src", "tests"]
+testpaths = ["tests"]

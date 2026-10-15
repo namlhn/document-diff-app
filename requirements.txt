@@ -1,0 +1,12 @@
+streamlit>=1.30
+PyMuPDF>=1.23
+python-docx>=1.0
+markdown-it-py>=3.0
+rapidfuzz>=3.0
+numpy>=1.23
+diff-match-patch>=20230430
+pytest>=7
+hypothesis>=6
+fastapi>=0.100.0
+uvicorn[standard]>=0.23.0
+python-multipart>=0.0.6
