@@ -17,11 +17,11 @@ from fastapi.responses import HTMLResponse, PlainTextResponse
 
 from document_diff.diff import unified_patch
 from document_diff.models import CompareOptions, ParseError
+from document_diff.parsers import validate_file_pair
 from document_diff.pipeline import compare_documents
 from document_diff.reports import render_html, to_dict
 
 MAX_MB = int(os.environ.get("MAX_UPLOAD_MB", "50"))
-ALLOWED_EXTENSIONS = {".pdf", ".docx", ".md", ".markdown"}
 
 app = FastAPI(
     title="Document Diff API",
@@ -38,13 +38,11 @@ app.add_middleware(
 )
 
 
-def _validate_file_extension(filename: str) -> None:
-    ext = os.path.splitext(filename)[1].lower()
-    if ext not in ALLOWED_EXTENSIONS:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Unsupported file type '{ext}' for file '{filename}'. Supported: {', '.join(sorted(ALLOWED_EXTENSIONS))}",
-        )
+def _validate_files(old_name: str, new_name: str) -> None:
+    try:
+        validate_file_pair(old_name, new_name)
+    except ParseError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
 
 
 @app.get("/health")
@@ -64,8 +62,7 @@ async def compare_documents_json(
     include_spans: bool = Form(True, description="Include word-level inline diff spans"),
 ):
     """Upload two documents and receive a comprehensive structured JSON diff report."""
-    _validate_file_extension(old_file.filename or "")
-    _validate_file_extension(new_file.filename or "")
+    _validate_files(old_file.filename or "", new_file.filename or "")
 
     old_bytes = await old_file.read()
     new_bytes = await new_file.read()
@@ -104,8 +101,7 @@ async def compare_documents_html(
     review_only: bool = Form(False, description="Display only changes flagged for review"),
 ):
     """Upload two documents and receive a complete self-contained HTML side-by-side report."""
-    _validate_file_extension(old_file.filename or "")
-    _validate_file_extension(new_file.filename or "")
+    _validate_files(old_file.filename or "", new_file.filename or "")
 
     old_bytes = await old_file.read()
     new_bytes = await new_file.read()
@@ -146,8 +142,7 @@ async def compare_documents_patch(
     ignore_formatting: bool = Form(True),
 ):
     """Upload two documents and receive standard unified diff patch text."""
-    _validate_file_extension(old_file.filename or "")
-    _validate_file_extension(new_file.filename or "")
+    _validate_files(old_file.filename or "", new_file.filename or "")
 
     old_bytes = await old_file.read()
     new_bytes = await new_file.read()

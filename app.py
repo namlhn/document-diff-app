@@ -17,7 +17,7 @@ TYPES = ["pdf", "docx", "md"]
 
 st.set_page_config(page_title="Document Diff", layout="wide")
 st.title("📄 Document Diff")
-st.caption("So sánh hai tài liệu (PDF, DOCX, Markdown) như công cụ compare source code.")
+st.caption("Chọn hai file cùng loại: PDF, DOCX hoặc MD. PDF scan/ảnh cần được OCR trước khi so sánh.")
 
 c1, c2 = st.columns(2)
 old_file = c1.file_uploader("Bản cũ (before)", type=TYPES, key="old")

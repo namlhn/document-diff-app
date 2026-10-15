@@ -30,7 +30,7 @@ def test_long_pdf_single_sentence_change():
     assert elapsed < 30
 
 
-def test_insert_at_start_cross_format_pdf_docx_md():
+def test_insert_at_start_docx_md():
     base = [("h2", "Dieu 1. Pham vi"), ("p", "Noi dung dieu mot rat quan trong voi moi nguoi."),
             ("p", "Noi dung thu hai cua van ban nay khong thay doi.")]
     added = [("p", "Doan moi duoc them vao dau tai lieu de kiem tra.")] + base
@@ -39,9 +39,6 @@ def test_insert_at_start_cross_format_pdf_docx_md():
     assert [c.kind for c in real(res)] == ["ADDED"]
     res = compare_documents(make_docx(base), "a.docx", make_docx(added), "b.docx")
     assert [c.kind for c in real(res)] == ["ADDED"]
-    res = compare_documents(make_md(base), "a.md", make_docx(added), "b.docx")
-    assert [c.kind for c in real(res)] == ["ADDED"]
-    assert any("Cross-format" in w for w in res.warnings)
 
 
 def test_formatting_option():
@@ -104,3 +101,12 @@ def test_comparison_validates_each_upload_once(monkeypatch):
     assert result.new_sha256 == hashlib.sha256(new).hexdigest()
     assert result.stats["old_metadata"]["sha256"] == result.old_sha256
     assert result.stats["new_metadata"]["sha256"] == result.new_sha256
+
+
+@pytest.mark.parametrize("old_name,new_name", [
+    ("a.pdf", "b.docx"), ("a.md", "b.pdf"), ("a.docx", "b.md"),
+    ("a.markdown", "b.markdown"), ("a.txt", "b.txt"),
+])
+def test_reject_invalid_file_pair(old_name, new_name):
+    with pytest.raises(ParseError):
+        compare_documents(b"content", old_name, b"content", new_name)

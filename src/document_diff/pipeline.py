@@ -9,12 +9,13 @@ from typing import Optional
 from .diff import classify
 from .matching import align
 from .models import ComparisonResult, CompareOptions
-from .parsers import parse_document
+from .parsers import parse_document, validate_file_pair
 
 
 def compare_documents(old_data: bytes, old_name: str, new_data: bytes, new_name: str,
                       options: Optional[CompareOptions] = None) -> ComparisonResult:
     """Compare two documents. Raises ParseError on invalid/empty/unparseable input."""
+    validate_file_pair(old_name, new_name)
     opts = options or CompareOptions()
     t0 = time.perf_counter()
     old_res = parse_document(old_data, old_name, "old", opts.max_upload_mb)
@@ -31,9 +32,6 @@ def compare_documents(old_data: bytes, old_name: str, new_data: bytes, new_name:
     warnings = ["[old] " + w for w in old_res.warnings] + ["[new] " + w for w in new_res.warnings]
     if old_hash == new_hash:
         warnings.append("Both files are byte-identical.")
-    if old_name.lower().rsplit(".", 1)[-1] != new_name.lower().rsplit(".", 1)[-1]:
-        warnings.append("Cross-format comparison: paragraph boundaries may differ between formats; "
-                        "review UNRESOLVED/low-similarity items.")
     stats = {
         "created_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "old_blocks": len(old_res.blocks), "new_blocks": len(new_res.blocks),

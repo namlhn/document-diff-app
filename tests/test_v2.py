@@ -7,7 +7,7 @@ from document_diff.models import CompareOptions
 from document_diff.parsers import parse_document
 from document_diff.pipeline import compare_documents
 from document_diff.reports import render_html, section_groups, to_dict
-from helpers import make_docx, make_md
+from helpers import make_docx, make_md, make_pdf
 
 LONG = ("Ben nhan co nghia vu bao quan toan bo tai lieu duoc giao trong suot thoi han hop dong va phai "
         "hoan tra day du cho ben giao khi ket thuc hop dong theo dung quy dinh da thoa thuan truoc do.")
@@ -43,10 +43,10 @@ def test_header_footer_removed_and_paragraph_stitched():
     assert r.metadata["stitched_paragraphs"] == 1
 
 
-def test_pdf_vs_docx_split_paragraph_no_false_changes():
+def test_pdf_split_paragraph_no_false_changes():
     items = [("p", "Doan mo dau cua tai lieu so mot."), ("p", LONG), ("p", "Doan ket thuc cua trang hai."),
              ("p", "Noi dung trang ba hoan toan khac.")]
-    res = compare_documents(pdf_with_split_paragraph(), "a.pdf", make_docx(items), "b.docx")
+    res = compare_documents(pdf_with_split_paragraph(), "a.pdf", make_pdf([items]), "b.pdf")
     real = [c for c in res.changes if c.kind != "UNCHANGED"]
     assert real == [], [(c.kind, c.old_text, c.new_text) for c in real]
 

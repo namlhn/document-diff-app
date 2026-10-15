@@ -120,7 +120,7 @@ def parse_pdf(data: bytes, id_prefix: str = "b") -> ParseResult:
     removed = len(entries) - len(kept)
 
     if not kept:
-        raise ParseError("No extractable text in PDF. It may be a scanned document; OCR is not supported yet.")
+        raise ParseError("PDF không có lớp văn bản để so sánh (có thể là bản scan/ảnh). Vui lòng OCR thành PDF có text trước khi tải lên.")
 
     size_weights: Counter = Counter()
     for e in kept:

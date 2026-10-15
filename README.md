@@ -42,7 +42,8 @@ Docker: `docker build -t document-diff . && docker run -p 8501:8501 document-dif
 
 - No OCR: scanned PDFs are detected and warned about; a fully scanned PDF is rejected rather than reported as "no changes".
 - PDF reading order relies on PyMuPDF sorting; multi-column layouts may need review. Headings are guessed from font size.
-- Cross-format comparison (PDF ↔ DOCX ↔ MD) works, but paragraph boundaries differ between formats; expect more `UNRESOLVED`.
+- Upload two files of the same type: `.pdf`, `.docx`, or `.md` only. Mixed formats and `.markdown` are rejected.
+- PDFs without extractable text are rejected with an OCR message. PDFs containing both text and scanned pages include a warning listing the scanned pages.
 - DOCX has no page numbers (not stored in the file); location is paragraph/table reference.
 - Line diff uses stdlib `difflib` (pygit2/libgit2 not integrated); inline diff uses the `diff-match-patch` PyPI package on word tokens.
 - Not covered: AI summarisation, legal-effect analysis, amendment-command extraction, version history, database.

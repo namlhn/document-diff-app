@@ -10,7 +10,17 @@ from .docx_parser import parse_docx
 from .markdown_parser import parse_markdown
 from .pdf_parser import parse_pdf
 
-SUPPORTED = {".pdf": parse_pdf, ".docx": parse_docx, ".md": parse_markdown, ".markdown": parse_markdown}
+SUPPORTED = {".pdf": parse_pdf, ".docx": parse_docx, ".md": parse_markdown}
+
+
+def validate_file_pair(old_name: str, new_name: str) -> None:
+    """Require two supported files of the same type before parsing."""
+    extensions = [os.path.splitext(name)[1].lower() for name in (old_name, new_name)]
+    for name, ext in zip((old_name, new_name), extensions):
+        if ext not in SUPPORTED:
+            raise ParseError("Định dạng không hỗ trợ: %s. Chỉ chấp nhận .pdf, .docx, .md." % name)
+    if extensions[0] != extensions[1]:
+        raise ParseError("Hai file phải cùng loại: PDF với PDF, DOCX với DOCX hoặc MD với MD.")
 
 
 def validate_upload(data: bytes, filename: str, max_mb: int = 50) -> Tuple[str, str]:
@@ -36,4 +46,4 @@ def parse_document(data: bytes, filename: str, id_prefix: str = "b", max_mb: int
     return result
 
 
-__all__ = ["parse_document", "validate_upload", "parse_pdf", "parse_docx", "parse_markdown"]
+__all__ = ["parse_document", "validate_upload", "validate_file_pair", "parse_pdf", "parse_docx", "parse_markdown"]
